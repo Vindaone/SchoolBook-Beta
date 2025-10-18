@@ -51,8 +51,30 @@
       text-align: center;
       cursor: pointer;
       transition: 0.3s;
+      word-wrap: break-word;   /* Wrap long words */
     }
     .post:hover { background: #222; }
+
+    /* Title styles */
+    .post h3 {
+      font-size: 1.1em;
+      margin: 0 0 10px 0;
+      overflow-wrap: break-word;   /* Wrap very long words */
+      white-space: normal;         /* Allow line breaks */
+      line-height: 1.2em;
+      display: block;
+    }
+
+    /* Username styles */
+    .post p {
+      margin: 0;
+      font-size: 0.9em;
+      opacity: 0.7;
+      overflow-wrap: break-word;
+      white-space: normal;
+    }
+
+    /* Loading screen */
     #loading {
       position: fixed;
       top: 0; left: 0;
@@ -107,6 +129,7 @@
           const post = data[id];
           const div = document.createElement('div');
           div.className = 'post';
+          div.title = `${post.title} by ${post.user}`; // Tooltip on hover
           div.innerHTML = `<h3>${post.title}</h3><p>by ${post.user}</p>`;
           div.onclick = () => location.href = `post.html?id=${id}`;
           postsContainer.appendChild(div);
