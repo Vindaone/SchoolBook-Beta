@@ -76,6 +76,13 @@
     user-select: none;
   }
 
+  /* Timestamp */
+  .timestamp {
+    font-size: 0.6em;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
+
   /* Overlay for custom confirmation */
   .overlay {
     position: fixed;
@@ -144,6 +151,8 @@
 <div class="container" id="postContainer">
   <h2 id="title">Loading...</h2>
   <p><strong>by <span id="user"></span></strong></p>
+  <!-- Timestamp -->
+  <p class="timestamp" id="timestamp"></p>
   <p id="text"></p>
 
   <!-- Reactions always visible -->
@@ -195,6 +204,7 @@ const postId = params.get('id');
 const titleEl = document.getElementById('title');
 const userEl = document.getElementById('user');
 const textEl = document.getElementById('text');
+const timestampEl = document.getElementById('timestamp');
 const deleteBtn = document.getElementById('deleteBtn');
 const postContainer = document.getElementById('postContainer');
 const confirmOverlay = document.getElementById('confirmOverlay');
@@ -203,6 +213,17 @@ const cancelDeleteBtn = document.getElementById('cancelDelete');
 const reactionsBar = document.getElementById('reactionsBar');
 
 const reactionTypes = ["like","love","haha","wow","sad","angry"];
+
+function formatTime(ms){
+  const d = new Date(ms);
+  const options = { month:'short', day:'numeric' };
+  const datePart = d.toLocaleDateString('en-US', options);
+  let hours = d.getHours();
+  const minutes = d.getMinutes().toString().padStart(2,'0');
+  const ampm = hours>=12?'PM':'AM';
+  hours = hours%12; hours = hours?hours:12;
+  return `${datePart} - ${hours}:${minutes} ${ampm}`;
+}
 
 function updateReactionsDisplay(reactions){
   reactionTypes.forEach(type=>{
@@ -220,6 +241,7 @@ if(postId){
       titleEl.textContent = post.title;
       userEl.textContent = post.user;
       textEl.textContent = post.text;
+      timestampEl.textContent = post.timestamp?formatTime(post.timestamp):'';
       if(!post.reactions) post.reactions = {};
       updateReactionsDisplay(post.reactions);
     } else {
