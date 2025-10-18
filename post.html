@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Post - SchoolBook</title>
+  <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    body {
+      font-family: 'Lato', sans-serif;
+      background: #000;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      background: #111;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 0 15px rgba(255,255,255,0.05);
+      transition: opacity 0.4s ease;
+      position: relative;
+    }
+    button {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 10px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 10px;
+    }
+    button:hover { background: #ccc; }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #f44;
+      font-size: 0.9em;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      opacity: 0.7;
+      transition: 0.2s;
+    }
+    .delete-btn:hover {
+      opacity: 1;
+      transform: scale(1.05);
+    }
+    .delete-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Overlay for custom confirmation */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+    .overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .confirm-box {
+      background: #111;
+      padding: 25px 30px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 0 15px rgba(255,255,255,0.1);
+      max-width: 300px;
+      animation: fadeIn 0.3s ease;
+    }
+    .confirm-box h3 {
+      margin: 0 0 15px;
+      font-size: 1.1rem;
+    }
+    .confirm-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .btn-cancel, .btn-delete {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-cancel {
+      background: #333;
+      color: #fff;
+    }
+    .btn-cancel:hover {
+      background: #444;
+    }
+    .btn-delete {
+      background: #f44;
+      color: #fff;
+    }
+    .btn-delete:hover {
+      background: #d33;
+    }
+
+    @keyframes fadeIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    /* FIX: preserve spaces and line breaks */
+    #text {
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+  </style>
+</head>
+<body>
+  <button onclick="location.href='index.html'">← Back</button>
+
+  <div class="container" id="postContainer">
+    <h2 id="title">Loading...</h2>
+    <p><strong>by <span id="user"></span></strong></p>
+    <p id="text"></p>
+    <button class="delete-btn" id="deleteBtn" title="Delete Post">
+      <i data-lucide="trash-2"></i> Delete Post
+    </button>
+  </div>
+
+  <!-- Custom confirmation popup -->
+  <div class="overlay" id="confirmOverlay">
+    <div class="confirm-box">
+      <h3>Are you sure you want to delete this post?</h3>
+      <div class="confirm-actions">
+        <button class="btn-cancel" id="cancelDelete">Cancel</button>
+        <button class="btn-delete" id="confirmDelete">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBoQdbT4FVaPcbgKmmgBg2Ea5NAYJj66Hk",
+      authDomain: "void-c8188.firebaseapp.com",
+      databaseURL: "https://void-c8188-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "void-c8188",
+      storageBucket: "void-c8188.firebasestorage.app",
+      messagingSenderId: "16905892121",
+      appId: "1:16905892121:web:99901fc948016d7efb9588",
+      measurementId: "G-QNMMR5Z6JL"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const params = new URLSearchParams(window.location.search);
+    const postId = params.get('id');
+
+    const titleEl = document.getElementById('title');
+    const userEl = document.getElementById('user');
+    const textEl = document.getElementById('text');
+    const deleteBtn = document.getElementById('deleteBtn');
+    const postContainer = document.getElementById('postContainer');
+    const confirmOverlay = document.getElementById('confirmOverlay');
+    const confirmDeleteBtn = document.getElementById('confirmDelete');
+    const cancelDeleteBtn = document.getElementById('cancelDelete');
+
+    // Load post
+    if (postId) {
+      const postRef = ref(db, 'posts/' + postId);
+      get(postRef).then(snapshot => {
+        if (snapshot.exists()) {
+          const post = snapshot.val();
+          titleEl.textContent = post.title;
+          userEl.textContent = post.user;
+          textEl.textContent = post.text; // pre-wrap ensures spacing preserved
+        } else {
+          titleEl.textContent = 'Post not found.';
+          deleteBtn.style.display = 'none';
+        }
+      });
+    }
+
+    // Show custom confirm box
+    deleteBtn.addEventListener('click', () => {
+      confirmOverlay.classList.add('active');
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+      confirmOverlay.classList.remove('active');
+    });
+
+    confirmDeleteBtn.addEventListener('click', async () => {
+      const postRef = ref(db, 'posts/' + postId);
+      postContainer.style.opacity = '0.3';
+      try {
+        await remove(postRef);
+        confirmOverlay.classList.remove('active');
+        alert('Post deleted successfully!');
+        window.location.href = 'index.html';
+      } catch (err) {
+        alert('Failed to delete post.');
+        postContainer.style.opacity = '1';
+      }
+    });
+
+    lucide.createIcons();
+  </script>
+</body>
+</html>
