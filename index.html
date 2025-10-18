@@ -52,22 +52,18 @@
     cursor: pointer;
     transition: 0.3s;
     word-wrap: break-word;
-    position: relative;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
   .post:hover { background: #222; }
-
   .post h3 {
     font-size: 1.1em;
-    margin: 0 0 10px 0;
+    margin: 0 0 5px 0;
     overflow-wrap: break-word;
     white-space: normal;
     line-height: 1.2em;
-    display: block;
   }
-
   .post p {
     margin: 0;
     font-size: 0.9em;
@@ -75,13 +71,16 @@
     overflow-wrap: break-word;
     white-space: normal;
   }
-
-  /* Reactions fixed at bottom of post card */
+  .timestamp {
+    font-size: 0.5em;
+    opacity: 0.6;
+    margin-top: 4px;
+  }
   .reactions-bar {
     display: flex;
     justify-content: center;
     gap: 5px;
-    margin-top: 10px;
+    margin-top: 5px;
     flex-shrink: 0;
   }
   .reaction {
@@ -92,7 +91,6 @@
     cursor: pointer;
     user-select: none;
   }
-
   #loading {
     position: fixed;
     top: 0; left: 0;
@@ -106,20 +104,20 @@
     z-index: 999;
   }
   @keyframes fadeDots {
-    0%, 100% { opacity: 0.3; }
-    50% { opacity: 1; }
+    0%,100% {opacity:0.3;}
+    50% {opacity:1;}
   }
 </style>
 </head>
 <body>
 <div id="loading">Loading...</div>
-<div class="header">SchoolBook - Solaris<small>by Vince</small></div>
+<div class="header">SchoolBook <small>by Vince</small></div>
 <button class="plus-btn" onclick="location.href='create.html'">+</button>
 <div class="posts" id="posts"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBoQdbT4FVaPcbgKmmgBg2Ea5NAYJj66Hk",
@@ -138,18 +136,22 @@ const postsContainer = document.getElementById('posts');
 const loadingScreen = document.getElementById('loading');
 
 const reactionTypes = ["like","love","haha","wow","sad","angry"];
-const reactionEmojis = {
-  like:"👍",
-  love:"❤️",
-  haha:"😂",
-  wow:"😮",
-  sad:"😢",
-  angry:"😡"
-};
+const reactionEmojis = {like:"👍",love:"❤️",haha:"😂",wow:"😮",sad:"😢",angry:"😡"};
+
+function formatTime(ms){
+  const d = new Date(ms);
+  const options = { month:'short', day:'numeric' };
+  const datePart = d.toLocaleDateString('en-US', options);
+  let hours = d.getHours();
+  const minutes = d.getMinutes().toString().padStart(2,'0');
+  const ampm = hours>=12?'PM':'AM';
+  hours = hours%12; hours = hours?hours:12;
+  return `${datePart} - ${hours}:${minutes} ${ampm}`;
+}
 
 function createReactionsBar(postId,reactions){
   const bar = document.createElement('div');
-  bar.className = 'reactions-bar';
+  bar.className='reactions-bar';
   reactionTypes.forEach(type=>{
     const count = reactions && reactions[type]?reactions[type]:0;
     const btn = document.createElement('div');
@@ -163,10 +165,9 @@ function createReactionsBar(postId,reactions){
     btn.addEventListener('click',e=>{
       e.stopPropagation();
       const reactionsRef = ref(db,'posts/'+postId+'/reactions/'+type);
-      reactionsRef.transaction(current=> (current||0)+1 );
+      runTransaction(reactionsRef,current=>(current||0)+1);
     });
 
-    // Show only if used or clicked
     if(count>0) bar.appendChild(btn);
   });
   return bar;
@@ -183,11 +184,18 @@ onValue(postsRef,(snapshot)=>{
       div.className='post';
       div.title=`${post.title} by ${post.user}`;
       div.innerHTML=`<h3>${post.title}</h3><p>by ${post.user}</p>`;
-      div.onclick=()=>location.href=`post.html?id=${id}`;
 
+      // Timestamp
+      const ts = document.createElement('div');
+      ts.className='timestamp';
+      ts.textContent = post.timestamp?formatTime(post.timestamp):'';
+      div.appendChild(ts);
+
+      // Reactions
       const bar = createReactionsBar(id,post.reactions);
       div.appendChild(bar);
 
+      div.onclick=()=>location.href=`post.html?id=${id}`;
       postsContainer.appendChild(div);
     });
   }else{
