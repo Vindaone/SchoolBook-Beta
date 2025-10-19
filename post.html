@@ -1,188 +1,68 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>Post - SchoolBook</title>
 <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&display=swap" rel="stylesheet">
 <script src="https://unpkg.com/lucide@latest"></script>
 <style>
-  body {
-    font-family: 'Lato', sans-serif;
-    background: #000;
-    color: #fff;
-    margin: 0;
-    padding: 20px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-  .container {
-    max-width: 600px;
-    width: 100%;
-    background: #111;
-    border-radius: 12px;
-    padding: 20px;
-    margin-top: 20px;
-    box-shadow: 0 0 15px rgba(255,255,255,0.05);
-    transition: opacity 0.4s ease;
-    position: relative;
-  }
-  button {
-    background: #fff;
-    color: #000;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 6px;
-    cursor: pointer;
-    margin-bottom: 10px;
-  }
-  button:hover { background: #ccc; }
-
-  /* Delete button bottom-right */
-  .delete-btn {
-    position: absolute;
-    bottom: 10px;
-    right: 10px;
-    background: none;
-    color: #f44;
-    font-size: 0.9em;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    opacity: 0.7;
-    transition: 0.2s;
-  }
-  .delete-btn:hover {
-    opacity: 1;
-    transform: scale(1.05);
-  }
-  .delete-btn svg { width: 18px; height: 18px; }
-
-  /* Reactions under card */
-  .reactions-bar {
-    display: flex;
-    gap: 10px;
-    margin-top: 15px;
-    flex-wrap: wrap;
-  }
-  .reaction {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 1em;
-    cursor: pointer;
-    user-select: none;
-  }
-
-  /* Timestamp */
-  .timestamp {
-    font-size: 0.6em;
-    opacity: 0.6;
-    margin-top: 4px;
-  }
-
-  /* Overlay for custom confirmation */
-  .overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, 0.85);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-  }
-  .overlay.active {
-    opacity: 1;
-    pointer-events: all;
-  }
-  .confirm-box {
-    background: #111;
-    padding: 25px 30px;
-    border-radius: 12px;
-    text-align: center;
-    box-shadow: 0 0 15px rgba(255,255,255,0.1);
-    max-width: 300px;
-    animation: fadeIn 0.3s ease;
-  }
-  .confirm-box h3 {
-    margin: 0 0 15px;
-    font-size: 1.1rem;
-  }
-  .confirm-actions {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .btn-cancel, .btn-delete {
-    flex: 1;
-    padding: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  .btn-cancel {
-    background: #333;
-    color: #fff;
-  }
-  .btn-cancel:hover { background: #444; }
-  .btn-delete {
-    background: #f44;
-    color: #fff;
-  }
-  .btn-delete:hover { background: #d33; }
-
-  @keyframes fadeIn {
-    from { transform: scale(0.95); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-  }
-
-  #text { white-space: pre-wrap; word-wrap: break-word; }
+  body{font-family:'Lato',sans-serif;background:#000;color:#fff;margin:0;padding:20px;display:flex;flex-direction:column;align-items:center}
+  .container{max-width:600px;width:100%;background:#111;border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 0 15px rgba(255,255,255,0.05);position:relative}
+  button{background:#fff;color:#000;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;margin:8px 0}
+  button:hover{background:#ccc}
+  .delete-btn{position:absolute;bottom:10px;right:10px;background:none;color:#f44;font-size:0.9em;cursor:pointer;display:flex;align-items:center;gap:6px;opacity:0.8}
+  .delete-btn:hover{opacity:1;transform:scale(1.02)}
+  .reactions-bar{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
+  .reaction{display:flex;align-items:center;gap:6px;font-size:1em;cursor:pointer;user-select:none}
+  .reaction .count{margin-left:4px;font-weight:700}
+  .timestamp{font-size:0.6em;opacity:0.6;margin-top:4px}
+  .upload-card{background:#111;border-radius:10px;padding:15px;margin-top:20px;box-shadow:0 0 10px rgba(255,255,255,0.05);text-align:center}
+  .upload-card img{width:100%;border-radius:8px;margin-top:10px}
+  .upload-card h3{margin:10px 0 6px}
+  .upload-card p{font-size:0.95em;opacity:0.9}
+  .add-upload-wrapper{margin-top:16px;display:flex;justify-content:center}
+  .add-upload-btn{background:#fff;color:#000;border-radius:8px;padding:8px 12px;cursor:pointer}
+  .status{margin-top:8px;font-size:0.9em;opacity:0.85}
 </style>
 </head>
 <body>
-<button onclick="location.href='index.html'">← Back</button>
+  <button onclick="location.href='index.html'">← Back</button>
 
-<div class="container" id="postContainer">
-  <h2 id="title">Loading...</h2>
-  <p><strong>by <span id="user"></span></strong></p>
-  <!-- Timestamp -->
-  <p class="timestamp" id="timestamp"></p>
-  <p id="text"></p>
+  <div class="container" id="postContainer">
+    <h2 id="title">Loading...</h2>
+    <p><strong>by <span id="user">...</span></strong></p>
+    <p class="timestamp" id="timestamp"></p>
+    <p id="text" style="white-space:pre-wrap"></p>
 
-  <!-- Reactions always visible -->
-  <div class="reactions-bar" id="reactionsBar">
-    <div class="reaction" data-type="like">👍 <span class="count">0</span></div>
-    <div class="reaction" data-type="love">❤️ <span class="count">0</span></div>
-    <div class="reaction" data-type="haha">😂 <span class="count">0</span></div>
-    <div class="reaction" data-type="wow">😮 <span class="count">0</span></div>
-    <div class="reaction" data-type="sad">😢 <span class="count">0</span></div>
-    <div class="reaction" data-type="angry">😡 <span class="count">0</span></div>
-  </div>
-
-  <button class="delete-btn" id="deleteBtn" title="Delete Post">
-    <i data-lucide="trash-2"></i> Delete Post
-  </button>
-</div>
-
-<div class="overlay" id="confirmOverlay">
-  <div class="confirm-box">
-    <h3>Are you sure you want to delete this post?</h3>
-    <div class="confirm-actions">
-      <button class="btn-cancel" id="cancelDelete">Cancel</button>
-      <button class="btn-delete" id="confirmDelete">Delete</button>
+    <div class="reactions-bar" id="reactionsBar">
+      <div class="reaction" data-type="like">👍 <span class="count">0</span></div>
+      <div class="reaction" data-type="love">❤️ <span class="count">0</span></div>
+      <div class="reaction" data-type="haha">😂 <span class="count">0</span></div>
+      <div class="reaction" data-type="wow">😮 <span class="count">0</span></div>
+      <div class="reaction" data-type="sad">😢 <span class="count">0</span></div>
+      <div class="reaction" data-type="angry">😡 <span class="count">0</span></div>
     </div>
+
+    <!-- Delete post: removes entire node posts/{postId} -->
+    <button class="delete-btn" id="deletePostBtn" title="Delete Post">
+      <i data-lucide="trash-2"></i> Delete Post
+    </button>
   </div>
-</div>
+
+  <!-- Add Upload (placed under the post, not floating) -->
+  <div class="add-upload-wrapper" id="addUploadWrapper">
+    <button id="addUploadBtn" class="add-upload-btn">Upload Image</button>
+  </div>
+
+  <!-- Upload card area -->
+  <div id="uploadContainer" class="upload-card" style="display:none"></div>
+
+  <div class="status" id="status"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, get, runTransaction } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction, remove, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBoQdbT4FVaPcbgKmmgBg2Ea5NAYJj66Hk",
@@ -194,7 +74,6 @@ const firebaseConfig = {
   appId: "1:16905892121:web:99901fc948016d7efb9588",
   measurementId: "G-QNMMR5Z6JL"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
@@ -205,12 +84,12 @@ const titleEl = document.getElementById('title');
 const userEl = document.getElementById('user');
 const textEl = document.getElementById('text');
 const timestampEl = document.getElementById('timestamp');
-const deleteBtn = document.getElementById('deleteBtn');
-const postContainer = document.getElementById('postContainer');
-const confirmOverlay = document.getElementById('confirmOverlay');
-const confirmDeleteBtn = document.getElementById('confirmDelete');
-const cancelDeleteBtn = document.getElementById('cancelDelete');
 const reactionsBar = document.getElementById('reactionsBar');
+const uploadContainer = document.getElementById('uploadContainer');
+const addUploadBtn = document.getElementById('addUploadBtn');
+const addUploadWrapper = document.getElementById('addUploadWrapper');
+const deletePostBtn = document.getElementById('deletePostBtn');
+const statusEl = document.getElementById('status');
 
 const reactionTypes = ["like","love","haha","wow","sad","angry"];
 
@@ -225,58 +104,120 @@ function formatTime(ms){
   return `${datePart} - ${hours}:${minutes} ${ampm}`;
 }
 
-function updateReactionsDisplay(reactions){
-  reactionTypes.forEach(type=>{
-    const el = reactionsBar.querySelector(`.reaction[data-type="${type}"] .count`);
-    el.textContent = reactions[type] || 0;
-  });
-}
-
-// Load post
-if(postId){
-  const postRef = ref(db,'posts/'+postId);
-  get(postRef).then(snapshot=>{
-    if(snapshot.exists()){
-      const post = snapshot.val();
-      titleEl.textContent = post.title;
-      userEl.textContent = post.user;
-      textEl.textContent = post.text;
-      timestampEl.textContent = post.timestamp?formatTime(post.timestamp):'';
-      if(!post.reactions) post.reactions = {};
-      updateReactionsDisplay(post.reactions);
-    } else {
+// ensure we have a postId
+if(!postId){
+  titleEl.textContent = "No post specified.";
+  addUploadWrapper.style.display = 'none';
+  statusEl.textContent = 'Missing post id in URL.';
+} else {
+  // Listen live to the post node so UI updates automatically when anything changes
+  const postRef = ref(db, 'posts/' + postId);
+  onValue(postRef, (snap) => {
+    if(!snap.exists()){
       titleEl.textContent = "Post not found.";
-      deleteBtn.style.display = "none";
+      uploadContainer.style.display = 'none';
+      addUploadWrapper.style.display = 'none';
+      statusEl.textContent = 'This post was deleted.';
+      return;
     }
+    const post = snap.val();
+    titleEl.textContent = post.title || '';
+    userEl.textContent = post.user || '';
+    textEl.textContent = post.text || '';
+    timestampEl.textContent = post.timestamp ? formatTime(post.timestamp) : '';
+    // reactions display
+    const reactions = post.reactions || {};
+    reactionTypes.forEach(type=>{
+      const el = reactionsBar.querySelector(`.reaction[data-type="${type}"] .count`);
+      if(el) el.textContent = reactions[type] || 0;
+    });
+
+    // upload presence: if `upload` exists under this post, show it; otherwise show add button
+    if(post.upload){
+      const up = post.upload;
+      uploadContainer.style.display = 'block';
+      uploadContainer.innerHTML = `
+        <h3>${escapeHtml(up.title || '')}</h3>
+        <p>${escapeHtml(up.description || '')}</p>
+        ${up.image ? `<img src="${escapeAttr(up.image)}" alt="upload image">` : ''}
+        <div style="margin-top:10px">
+          <button id="deleteUploadBtn" style="background:#f44;color:#fff">Delete Upload</button>
+        </div>
+      `;
+      addUploadWrapper.style.display = 'none';
+
+      // attach delete upload handler
+      const deleteUploadBtn = document.getElementById('deleteUploadBtn');
+      deleteUploadBtn.onclick = async () => {
+        try{
+          statusEl.textContent = 'Deleting upload...';
+          await remove(ref(db, 'posts/' + postId + '/upload'));
+          statusEl.textContent = 'Upload deleted.';
+        }catch(e){
+          console.error(e);
+          statusEl.textContent = 'Failed to delete upload.';
+        }
+      };
+
+    } else {
+      uploadContainer.style.display = 'none';
+      addUploadWrapper.style.display = 'flex';
+    }
+  }, (err) => {
+    console.error('onValue error', err);
+    statusEl.textContent = 'Failed to load post.';
   });
 }
 
-// Reaction click
+// reactions handlers (use runTransaction to safely increment)
 reactionTypes.forEach(type=>{
   const btn = reactionsBar.querySelector(`.reaction[data-type="${type}"]`);
-  btn.addEventListener('click',()=>{
-    const reactionsRef = ref(db,'posts/'+postId+'/reactions/'+type);
-    runTransaction(reactionsRef,count=>count?count+1:1).then(()=>{
-      get(ref(db,'posts/'+postId+'/reactions')).then(snap=>{
-        const reactions = snap.val();
-        updateReactionsDisplay(reactions);
+  btn.addEventListener('click', async (e) => {
+    e.stopPropagation();
+    if(!postId) return;
+    const refPath = 'posts/' + postId + '/reactions/' + type;
+    try{
+      await runTransaction(ref(db, refPath), (current) => {
+        return (current || 0) + 1;
       });
-    });
+      // UI will update automatically through onValue listener
+    }catch(err){
+      console.error('reaction tx failed', err);
+      statusEl.textContent = 'Failed to add reaction.';
+    }
   });
 });
 
-// Delete button
-deleteBtn.addEventListener('click',()=>{confirmOverlay.classList.add('active')});
-cancelDeleteBtn.addEventListener('click',()=>{confirmOverlay.classList.remove('active')});
-confirmDeleteBtn.addEventListener('click',async()=>{
+// add upload button takes user to upload.html?id=postId
+addUploadBtn.addEventListener('click', () => {
+  if(!postId) return;
+  location.href = `upload.html?id=${postId}`;
+});
+
+// delete post button removes whole post node (and its upload)
+deletePostBtn.addEventListener('click', async () => {
+  if(!postId) return;
+  if(!confirm('Delete this post? This will remove any upload too.')) return;
   try{
-    await runTransaction(ref(db,'posts/'+postId),()=>null);
-    alert("Post deleted successfully!");
-    window.location.href="index.html";
-  }catch{
-    alert("Failed to delete post.");
+    statusEl.textContent = 'Deleting post...';
+    await remove(ref(db, 'posts/' + postId));
+    statusEl.textContent = 'Post deleted.';
+    setTimeout(()=>location.href = 'index.html', 800);
+  }catch(e){
+    console.error(e);
+    statusEl.textContent = 'Failed to delete post.';
   }
 });
+
+// small helpers to avoid XSS when injecting strings
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+}
+function escapeAttr(s){
+  if(!s) return '';
+  return s.replaceAll('"','&quot;').replaceAll("'", '&#39;');
+}
 
 lucide.createIcons();
 </script>
