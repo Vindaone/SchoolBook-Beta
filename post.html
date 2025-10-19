@@ -11,8 +11,8 @@
   .container{max-width:600px;width:100%;background:#111;border-radius:12px;padding:20px;margin-top:20px;box-shadow:0 0 15px rgba(255,255,255,0.05);position:relative}
   button{background:#fff;color:#000;border:none;padding:10px 15px;border-radius:6px;cursor:pointer;margin:8px 0}
   button:hover{background:#ccc}
-  .delete-btn{position:absolute;bottom:10px;right:10px;background:none;color:#f44;font-size:0.9em;cursor:pointer;display:flex;align-items:center;gap:6px;opacity:0.8}
-  .delete-btn:hover{opacity:1;transform:scale(1.02)}
+  .delete-btn{background:none;border:none;color:#f44;font-size:0.95em;cursor:pointer;margin-top:14px;display:flex;align-items:center;gap:6px;opacity:0.85;transition:0.2s}
+  .delete-btn:hover{opacity:1;transform:scale(1.03)}
   .reactions-bar{display:flex;gap:10px;margin-top:15px;flex-wrap:wrap}
   .reaction{display:flex;align-items:center;gap:6px;font-size:1em;cursor:pointer;user-select:none}
   .reaction .count{margin-left:4px;font-weight:700}
@@ -24,6 +24,16 @@
   .add-upload-wrapper{margin-top:16px;display:flex;justify-content:center}
   .add-upload-btn{background:#fff;color:#000;border-radius:8px;padding:8px 12px;cursor:pointer}
   .status{margin-top:8px;font-size:0.9em;opacity:0.85}
+
+  /* Popup confirmation */
+  .popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);display:flex;justify-content:center;align-items:center;z-index:9999;visibility:hidden;opacity:0;transition:0.2s}
+  .popup-overlay.active{visibility:visible;opacity:1}
+  .popup{background:#111;padding:20px 25px;border-radius:12px;text-align:center;max-width:280px;width:90%;box-shadow:0 0 15px rgba(255,255,255,0.1)}
+  .popup h3{margin-top:0;margin-bottom:10px}
+  .popup-buttons{display:flex;justify-content:center;gap:12px;margin-top:14px}
+  .popup-buttons button{padding:8px 14px;border-radius:8px;border:none;cursor:pointer}
+  .popup-buttons .yes{background:#f44;color:#fff}
+  .popup-buttons .no{background:#333;color:#fff}
 </style>
 </head>
 <body>
@@ -44,25 +54,35 @@
       <div class="reaction" data-type="angry">😡 <span class="count">0</span></div>
     </div>
 
-    <!-- Delete post: removes entire node posts/{postId} -->
+    <!-- Delete post: icon + text only (flat style) -->
     <button class="delete-btn" id="deletePostBtn" title="Delete Post">
       <i data-lucide="trash-2"></i> Delete Post
     </button>
   </div>
 
-  <!-- Add Upload (placed under the post, not floating) -->
+  <!-- Popup UI -->
+  <div class="popup-overlay" id="confirmPopup">
+    <div class="popup">
+      <h3>Delete this post?</h3>
+      <p>This will remove the post and any upload.</p>
+      <div class="popup-buttons">
+        <button class="yes" id="confirmYes">Yes</button>
+        <button class="no" id="confirmNo">No</button>
+      </div>
+    </div>
+  </div>
+
   <div class="add-upload-wrapper" id="addUploadWrapper">
     <button id="addUploadBtn" class="add-upload-btn">Upload Image</button>
   </div>
 
-  <!-- Upload card area -->
   <div id="uploadContainer" class="upload-card" style="display:none"></div>
 
   <div class="status" id="status"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
-import { getDatabase, ref, onValue, runTransaction, remove, get } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
+import { getDatabase, ref, onValue, runTransaction, remove } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBoQdbT4FVaPcbgKmmgBg2Ea5NAYJj66Hk",
@@ -79,7 +99,6 @@ const db = getDatabase(app);
 
 const params = new URLSearchParams(window.location.search);
 const postId = params.get('id');
-
 const titleEl = document.getElementById('title');
 const userEl = document.getElementById('user');
 const textEl = document.getElementById('text');
@@ -90,6 +109,9 @@ const addUploadBtn = document.getElementById('addUploadBtn');
 const addUploadWrapper = document.getElementById('addUploadWrapper');
 const deletePostBtn = document.getElementById('deletePostBtn');
 const statusEl = document.getElementById('status');
+const popup = document.getElementById('confirmPopup');
+const yesBtn = document.getElementById('confirmYes');
+const noBtn = document.getElementById('confirmNo');
 
 const reactionTypes = ["like","love","haha","wow","sad","angry"];
 
@@ -104,13 +126,11 @@ function formatTime(ms){
   return `${datePart} - ${hours}:${minutes} ${ampm}`;
 }
 
-// ensure we have a postId
 if(!postId){
   titleEl.textContent = "No post specified.";
   addUploadWrapper.style.display = 'none';
   statusEl.textContent = 'Missing post id in URL.';
 } else {
-  // Listen live to the post node so UI updates automatically when anything changes
   const postRef = ref(db, 'posts/' + postId);
   onValue(postRef, (snap) => {
     if(!snap.exists()){
@@ -125,14 +145,11 @@ if(!postId){
     userEl.textContent = post.user || '';
     textEl.textContent = post.text || '';
     timestampEl.textContent = post.timestamp ? formatTime(post.timestamp) : '';
-    // reactions display
     const reactions = post.reactions || {};
     reactionTypes.forEach(type=>{
       const el = reactionsBar.querySelector(`.reaction[data-type="${type}"] .count`);
       if(el) el.textContent = reactions[type] || 0;
     });
-
-    // upload presence: if `upload` exists under this post, show it; otherwise show add button
     if(post.upload){
       const up = post.upload;
       uploadContainer.style.display = 'block';
@@ -142,82 +159,52 @@ if(!postId){
         ${up.image ? `<img src="${escapeAttr(up.image)}" alt="upload image">` : ''}
         <div style="margin-top:10px">
           <button id="deleteUploadBtn" style="background:#f44;color:#fff">Delete Upload</button>
-        </div>
-      `;
+        </div>`;
       addUploadWrapper.style.display = 'none';
-
-      // attach delete upload handler
-      const deleteUploadBtn = document.getElementById('deleteUploadBtn');
-      deleteUploadBtn.onclick = async () => {
-        try{
-          statusEl.textContent = 'Deleting upload...';
-          await remove(ref(db, 'posts/' + postId + '/upload'));
-          statusEl.textContent = 'Upload deleted.';
-        }catch(e){
-          console.error(e);
-          statusEl.textContent = 'Failed to delete upload.';
-        }
+      document.getElementById('deleteUploadBtn').onclick = async () => {
+        statusEl.textContent = 'Deleting upload...';
+        await remove(ref(db, 'posts/' + postId + '/upload'));
+        statusEl.textContent = 'Upload deleted.';
       };
-
     } else {
       uploadContainer.style.display = 'none';
       addUploadWrapper.style.display = 'flex';
     }
-  }, (err) => {
-    console.error('onValue error', err);
-    statusEl.textContent = 'Failed to load post.';
   });
 }
 
-// reactions handlers (use runTransaction to safely increment)
 reactionTypes.forEach(type=>{
   const btn = reactionsBar.querySelector(`.reaction[data-type="${type}"]`);
   btn.addEventListener('click', async (e) => {
     e.stopPropagation();
     if(!postId) return;
     const refPath = 'posts/' + postId + '/reactions/' + type;
-    try{
-      await runTransaction(ref(db, refPath), (current) => {
-        return (current || 0) + 1;
-      });
-      // UI will update automatically through onValue listener
-    }catch(err){
-      console.error('reaction tx failed', err);
-      statusEl.textContent = 'Failed to add reaction.';
-    }
+    await runTransaction(ref(db, refPath), (current) => (current || 0) + 1);
   });
 });
 
-// add upload button takes user to upload.html?id=postId
 addUploadBtn.addEventListener('click', () => {
   if(!postId) return;
   location.href = `upload.html?id=${postId}`;
 });
 
-// delete post button removes whole post node (and its upload)
-deletePostBtn.addEventListener('click', async () => {
+deletePostBtn.addEventListener('click', () => popup.classList.add('active'));
+noBtn.addEventListener('click', () => popup.classList.remove('active'));
+yesBtn.addEventListener('click', async () => {
   if(!postId) return;
-  if(!confirm('Delete this post? This will remove any upload too.')) return;
+  popup.classList.remove('active');
   try{
     statusEl.textContent = 'Deleting post...';
     await remove(ref(db, 'posts/' + postId));
     statusEl.textContent = 'Post deleted.';
-    setTimeout(()=>location.href = 'index.html', 800);
+    setTimeout(()=>location.href='index.html',800);
   }catch(e){
-    console.error(e);
-    statusEl.textContent = 'Failed to delete post.';
+    statusEl.textContent='Failed to delete post.';
   }
 });
 
-// small helpers to avoid XSS when injecting strings
-function escapeHtml(s){
-  if(!s) return '';
-  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-}
-function escapeAttr(s){
-  if(!s) return '';
-  return s.replaceAll('"','&quot;').replaceAll("'", '&#39;');
-}
+function escapeHtml(s){return s? s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;'):'';}
+function escapeAttr(s){return s? s.replaceAll('"','&quot;').replaceAll("'","&#39;"):'';}
 
 lucide.createIcons();
 </script>
